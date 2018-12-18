@@ -13,24 +13,119 @@
     <script src="../plugins/bootstrap/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../plugins/angularjs/angular.min.js"></script>
     
+    <!-- 分页组件 -->
+    <link rel="stylesheet" type="text/css" href="../plugins/angularjs/pagination.css">
+    <script type="text/javascript" src="../plugins/angularjs/pagination.js"></script>
+
     <script type="text/javascript">
-    //创建模块
-    var app = angular.module("brandApp",[]);
+    //创建模块，同时导入分页模块
+    var app = angular.module("brandApp",['pagination']);
     app.controller("brandController",function($scope,$http){
+
     	$scope.findAll = function(){
     		//封装ajax来调用查询所用的品牌的方法
+
     		$http.get('../brand/findAll.do').success(
     				function(data){
     					$scope.list = data;
     				}
     			);
     	}
-    });
+    	//分页组件配置
+    	$scope.paginationConf = {
+	    	 currentPage: 1, 		//当前页数
+	 	 	 totalItems: 10, 		//总的条数纪录
+	 	 	 itemsPerPage: 10, 		//每页显示多少条记录数
+	 	 	 perPageOptions: [10, 20, 30, 40, 50], 
+	 	 	 onChange: function(){ 
+	 	 	        $scope.reloadList();//重新加载 
+	 	 	 } 
+    	}
 
+    	//刷新品牌列表
+    	$scope.reloadList = function(){
+    		//angularjs中使用$scope去调用方法
+    		$scope.search($scope.paginationConf.currentPage,$scope.paginationConf.itemsPerPage);
+    	}
+    	
+
+    	//获取当前页的数据记录和总的条数
+    	$scope.findPage = function(pageNum,pageSize) {
+    		$http.get('../brand/findPage.do?pageNum='+ pageNum +'&pageSize=' + pageSize).success(
+    				function(data) {
+    					$scope.list = data.rows;  //当前页的数据记录
+    					$scope.paginationConf.totalItems = data.total;	//总的数据条数
+    				}
+    			);
+    	}
+
+    	//添加品牌
+    	$scope.save = function() {
+    		var methodName = "add";
+    		if($scope.entity.id != null) {
+    			methodName = "update";
+    		}
+
+    		$http.post('../brand/'+ methodName +'.do',$scope.entity).success(
+    				function(data) {
+    					if(data.success) {
+    						$scope.reloadList();
+    					}else {
+    						alter(data.msg);
+    					}
+    				}
+
+    			);
+    	}
+
+    	//查询
+    	$scope.findOne = function(id) {
+    		$http.get('../brand/findOne.do?id=' + id).success(
+    				function(data) {
+    					$scope.entity = data;
+    				}
+    			);
+    	}
+
+    	$scope.selectIds = [];
+
+		$scope.selectOption = function($event,id) {
+			if($event.target.checked) {
+				$scope.selectIds.push(id);
+			}else {
+				var index = $scope.selectIds.indexOf(id);
+				$scope.selectIds.splice(index,1);
+			}
+		}
+
+		$scope.dete = function() {
+			$http.get('../brand/delete.do?ids=' + $scope.selectIds).success(
+					function(data) {
+    					if(data.success) {
+    						$scope.reloadList();
+    					}else {
+    						alter(data.msg);
+    					}
+    				}
+				);
+		}
+		
+		$scope.searchEntity = {};
+		$scope.search = function(pageNum,pageSize) {
+			$http.post('../brand/search.do?pageNum='+ pageNum +'&pageSize=' + pageSize,$scope.searchEntity).success(
+				function(data) {
+					$scope.list = data.rows;  //当前页的数据记录
+					$scope.paginationConf.totalItems = data.total;	//总的数据条数
+				}
+			);
+		}
+
+
+    });
     </script>
 
 </head>
-<body class="hold-transition skin-red sidebar-mini" ng-app="brandApp"  ng-controller="brandController" ng-init="findAll()">
+<body class="hold-transition skin-red sidebar-mini" ng-app="brandApp"  ng-controller="brandController" >
   <!-- .box-body -->
                     <div class="box-header with-border">
                         <h3 class="box-title">品牌管理</h3>
@@ -45,15 +140,16 @@
                             <div class="pull-left">
                                 <div class="form-group form-inline">
                                     <div class="btn-group">
-                                        <button type="button" class="btn btn-default" title="新建" data-toggle="modal" data-target="#editModal" ><i class="fa fa-file-o"></i> 新建</button>
-                                        <button type="button" class="btn btn-default" title="删除" ><i class="fa fa-trash-o"></i> 删除</button>           
+                                    	<!--在新建时清空弹出框内容-->
+                                        <button type="button" class="btn btn-default" title="新建" data-toggle="modal" data-target="#editModal" ng-click="entity={}" ><i class="fa fa-file-o"></i> 新建</button>
+                                        <button type="button" class="btn btn-default" title="删除" ng-click="dete()"><i class="fa fa-trash-o"></i> 删除</button>           
                                         <button type="button" class="btn btn-default" title="刷新" onclick="window.location.reload();"><i class="fa fa-refresh"></i> 刷新</button>
                                     </div>
                                 </div>
                             </div>
                             <div class="box-tools pull-right">
                                 <div class="has-feedback">
-							                                         
+							          品牌名称：<input ng-model="searchEntity.name">  品牌首字母：<input ng-model="searchEntity.firstChar">  <button  class="btn btn-default" ng-click="reloadList()">查询</button>                             
                                 </div>
                             </div>
                             <!--工具栏/-->
@@ -73,20 +169,20 @@
 			                      </thead>
 			                      <tbody>
 			                          <tr ng-repeat="brand in list">
-			                              <td><input  type="checkbox" ></td>			                              
+			                              <td><input  type="checkbox" ng-click="selectOption($event,brand.id)"></td>			                              
 				                          <td>{{brand.id}}</td>
 									      <td>{{brand.name}}</td>									     
 		                                  <td>{{brand.firstChar}}</td>		                                 
 		                                  <td class="text-center">                                           
-		                                 	  <button type="button" class="btn bg-olive btn-xs" data-toggle="modal" data-target="#editModal"  >修改</button>                                           
+		                                 	  <button type="button" class="btn bg-olive btn-xs" data-toggle="modal" data-target="#editModal"  ng-click="findOne(brand.id)" >修改</button>                                           
 		                                  </td>
 			                          </tr>
 									  
 			                      </tbody>
 			                  </table>
 			                  <!--数据列表/-->                        
-							  
-							 
+							  <tm-pagination conf="paginationConf"></tm-pagination>
+							 	{{searchEntity}}
                         </div>
                         <!-- 数据表格 /-->
                         
@@ -108,16 +204,16 @@
 			<table class="table table-bordered table-striped"  width="800px">
 		      	<tr>
 		      		<td>品牌名称</td>
-		      		<td><input  class="form-control" placeholder="品牌名称" >  </td>
+		      		<td><input  class="form-control" placeholder="品牌名称" ng-model="entity.name" >  </td>
 		      	</tr>		      	
 		      	<tr>
 		      		<td>首字母</td>
-		      		<td><input  class="form-control" placeholder="首字母">  </td>
+		      		<td><input  class="form-control" placeholder="首字母" ng-model="entity.firstChar">  </td>
 		      	</tr>		      	
 			 </table>				
 		</div>
 		<div class="modal-footer">						
-			<button class="btn btn-success" data-dismiss="modal" aria-hidden="true">保存</button>
+			<button class="btn btn-success" data-dismiss="modal" aria-hidden="true" ng-click="save()">保存</button>
 			<button class="btn btn-default" data-dismiss="modal" aria-hidden="true">关闭</button>
 		</div>
 	  </div>

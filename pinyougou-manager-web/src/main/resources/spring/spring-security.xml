@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+						http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd">
+	
+	<!-- 不需要经过权限就能访问的页面 -->
+	<http pattern="/*.html" security="none"></http>
+	<http pattern="/css/**" security="none"></http>
+	<http pattern="/img/**" security="none"></http>
+	<http pattern="/js/**" security="none"></http>
+	<http pattern="/plugins/**" security="none"></http>
+	
+	<!-- use-expressions:是否启用SPEL表达式，默认开启 -->
+	<http use-expressions="false">
+	<!-- pattern="/**" 表示拦截跟目录下的所有文件的访问路径  
+		access="ROLE_USER" 表示拥有ROLE_USER角色的用户才能够进行访问-->
+		<intercept-url pattern="/**" access="ROLE_ADMIN"/>
+		
+		<!-- 开启表单登录 
+			login-page 默认的登录页面
+			default-target-url 登录成功跳转的页面
+			always-use-default-target 每次登录成功总会直接跳转的页面
+			authentication-failure-url 登录失败跳转的页面 
+		-->
+		<form-login default-target-url="/admin/index.html" always-use-default-target="true" 
+		authentication-failure-url="/login.html" login-page="/login.html" />
+		<!-- 关闭跨站请求过滤 -->
+		<csrf disabled="true"/>
+		<headers>
+			<!-- 允许html中的iframe显示 -->
+			<frame-options policy="SAMEORIGIN"/>
+		</headers>
+	</http>
+	
+	<!-- 认证管理器 -->
+	<authentication-manager>
+	<!-- 认证提供 -->
+		<authentication-provider>
+			<user-service>
+				<user name="admin" password="admin" authorities="ROLE_ADMIN"/>
+				<user name="danjie" password="12345" authorities="ROLE_ADMIN"/>
+			</user-service>
+		</authentication-provider>
+	</authentication-manager>
+		
+</beans:beans>

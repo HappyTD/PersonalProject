@@ -5,11 +5,11 @@ import java.io.Serializable;
 public class ReturnResult implements Serializable{
 	
 	private boolean success;
-	private String msg;
-	public ReturnResult(boolean success, String msg) {
+	private String message;
+	public ReturnResult(boolean success, String message) {
 		super();
 		this.success = success;
-		this.msg = msg;
+		this.message = message;
 	}
 	public boolean isSuccess() {
 		return success;
@@ -17,11 +17,11 @@ public class ReturnResult implements Serializable{
 	public void setSuccess(boolean success) {
 		this.success = success;
 	}
-	public String getMsg() {
-		return msg;
+	public String getmessage() {
+		return message;
 	}
-	public void setMsg(String msg) {
-		this.msg = msg;
+	public void setmessage(String message) {
+		this.message = message;
 	}
 	
 	

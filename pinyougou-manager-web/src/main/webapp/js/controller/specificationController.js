@@ -76,15 +76,16 @@ app.controller('specificationController' ,function($scope,$controller   ,specifi
 			}			
 		);
 	}
-
-	//在使用对象中的数组时，必须先要提前定义，但是对象不需要定义
-	/*$scope.entity = {specificationOptionList:[]};*/
-	$scope.addTableRow = function() {
-		$scope.entity.specificationOptionList.push({});
+	
+	//$scope.entity={specificationOptionList:[]};
+	
+	//增加规格选项行
+	$scope.addTableRow=function(){
+		$scope.entity.specificationOptionList.push({});			
 	}
-
-	//删除新增
-	$scope.deteTableRow = function(index) {
+	
+	//删除规格选项行
+	$scope.deleTableRow=function(index){
 		$scope.entity.specificationOptionList.splice(index,1);
 	}
     

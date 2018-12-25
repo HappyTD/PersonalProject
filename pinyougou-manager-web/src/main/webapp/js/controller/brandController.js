@@ -1,82 +1,80 @@
-//在分离服务层后，控制层中需要将服务名以参数的形式传入才能被调用
-    app.controller("brandController",function($scope,$http,$controller,brandService){
-
-        //继承
-        //通过$scope:$scope 来传递
-        $controller("baseController",{$scope:$scope});
-
-    	$scope.findAll = function(){
-    		//封装ajax来调用查询所用的品牌的方法
-    		brandService.findAll().success(
-    				function(data){
-    					$scope.list = data;
-    				}
-    			);
-    	}
-    	
-    	//获取当前页的数据记录和总的条数
-    	$scope.findPage = function(pageNum,pageSize) {
-    		brandService.findPage(pageNum,pageSize).success(
-    				function(data) {
-    					$scope.list = data.rows;  //当前页的数据记录
-    					$scope.paginationConf.totalItems = data.total;	//总的数据条数
-    				}
-    			);
-    	}
-
-    	//添加品牌
-    	$scope.save = function() {
-    		var object = null;
-    		if($scope.entity.id != null) {
-    			object = brandService.update($scope.entity);
-    		}else {
-                object = brandService.add($scope.entity);
-            }
-
-    		object.success(
-    				function(data) {
-    					if(data.success) {
-    						$scope.reloadList();
-    					}else {
-    						alter(data.msg);
-    					}
-    				}
-
-    			);
-    	}
-
-    	//查询
-    	$scope.findOne = function(id) {
-    		brandService.findOne(id).success(
-    				function(data) {
-    					$scope.entity = data;
-    				}
-    			);
-    	}
-
-    	
-
-		$scope.dete = function() {
-			brandService.dete($scope.selectIds).success(
-					function(data) {
-    					if(data.success) {
-    						$scope.reloadList();
-    					}else {
-    						alter(data.msg);
-    					}
-    				}
-				);
-		}
-		
-		$scope.searchEntity = {};
-		$scope.search = function(pageNum,pageSize) {
-			brandService.search(pageNum,pageSize,$scope.searchEntity).success(
-				function(data) {
-					$scope.list = data.rows;  //当前页的数据记录
-					$scope.paginationConf.totalItems = data.total;	//总的数据条数
+ //控制层 
+app.controller('brandController' ,function($scope,$controller   ,brandService){	
+	
+	$controller('baseController',{$scope:$scope});//继承
+	
+    //读取列表数据绑定到表单中  
+	$scope.findAll=function(){
+		brandService.findAll().success(
+			function(response){
+				$scope.list=response;
+			}			
+		);
+	}    
+	
+	//分页
+	$scope.findPage=function(page,rows){			
+		brandService.findPage(page,rows).success(
+			function(response){
+				$scope.list=response.rows;	
+				$scope.paginationConf.totalItems=response.total;//更新总记录数
+			}			
+		);
+	}
+	
+	//查询实体 
+	$scope.findOne=function(id){				
+		brandService.findOne(id).success(
+			function(response){
+				$scope.entity= response;					
+			}
+		);				
+	}
+	
+	//保存 
+	$scope.save=function(){				
+		var serviceObject;//服务层对象  				
+		if($scope.entity.id!=null){//如果有ID
+			serviceObject=brandService.update( $scope.entity ); //修改  
+		}else{
+			serviceObject=brandService.add( $scope.entity  );//增加 
+		}				
+		serviceObject.success(
+			function(response){
+				if(response.success){
+					//重新查询 
+		        	$scope.reloadList();//重新加载
+				}else{
+					alert(response.message);
 				}
-			);
-		}
-
-
-    });
+			}		
+		);				
+	}
+	
+	 
+	//批量删除 
+	$scope.dele=function(){			
+		//获取选中的复选框			
+		brandService.dele( $scope.selectIds ).success(
+			function(response){
+				if(response.success){
+					$scope.reloadList();//刷新列表
+					$scope.selectIds=[];
+				}						
+			}		
+		);				
+	}
+	
+	$scope.searchEntity={};//定义搜索对象 
+	
+	//搜索
+	$scope.search=function(page,rows){			
+		brandService.search(page,rows,$scope.searchEntity).success(
+			function(response){
+				$scope.list=response.rows;	
+				$scope.paginationConf.totalItems=response.total;//更新总记录数
+			}			
+		);
+	}
+    
+});	
